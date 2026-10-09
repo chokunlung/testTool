@@ -1,0 +1,59 @@
+application:
+  host: 127.0.0.1
+  port: 8765
+  open_browser: true
+database:
+  host: ""
+  port: 50000
+  database: ""
+  username: ""
+  password: ""
+  protocol: TCPIP
+  schema: DB2WMS
+  table: ADM_API_ACCESS_LOG
+  columns:
+    id: LOG_ID
+    request_time: REQUEST_TIME
+    http_method: HTTP_METHOD
+    request_uri: REQUEST_URI
+    query_string: QUERY_STRING
+    request_headers: REQUEST_HEADERS
+    request_body: REQUEST_BODY
+    content_type: CONTENT_TYPE
+    log_return_code: RETURN_CODE
+    system_code: SYSTEM_CODE
+  query:
+    success_return_code: "200"
+    system_code: ""
+    fetch_limit: 10000
+projects:
+  - id: sample
+    name: 範例專案
+    repo_path: ""
+    environments:
+      - name: Local
+        base_url: http://localhost:8080
+        openapi_path: /v3/api-docs
+        verify_ssl: false
+        timeout_seconds: 30
+    response:
+      return_code_path: $.returnCode
+      success_code: "0000"
+    authentication:
+      type: bearer
+      header_name: Authorization
+      prefix: Bearer
+    max_concurrency: 5
+security:
+  blocked_host_keywords:
+    - prod
+    - production
+  remove_headers:
+    - authorization
+    - cookie
+    - host
+    - content-length
+    - connection
+    - transfer-encoding
+reports:
+  directory: reports
