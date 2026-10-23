@@ -1,18 +1,32 @@
+# API 回歸測試工具設定範例
+# 此檔不含真實帳密，可作為 config.yaml 的還原範本。
+# 建議優先從 UI「系統設定」修改；直接編輯後需重新啟動工具。
+
 application:
+  # 工具只監聽本機，避免其他電腦直接連入。
   host: 127.0.0.1
+  # UI 使用的本機 Port；被占用時可改成其他未使用的 Port。
   port: 8765
+  # 啟動 EXE 後是否自動開啟預設瀏覽器。
   open_browser: true
+
 database:
+  # 可填 db2 或 oracle。Oracle 使用 Thin Mode，不需 Oracle Client。
   type: db2
   host: ""
+  # DB2 常用 50000；Oracle 常用 1521。
   port: 50000
+  # DB2 Database 名稱；使用 Oracle 時通常留空。
   database: ""
+  # Oracle Service Name；使用 DB2 時留空。
   service_name: ""
+  # 建議使用只有 ADM_API_ACCESS_LOGS 查詢權限的帳號。
   username: ""
   password: ""
   protocol: TCPIP
   schema: DB2WMS
   table: ADM_API_ACCESS_LOGS
+  # 左側固定名稱不可修改；右側改成資料庫的實際欄位名稱。
   columns:
     id: LOG_ID
     request_time: REQUEST_TIME
@@ -26,33 +40,52 @@ database:
     system_code: SYSTEM_CODE
     api_name: API_NAME
   query:
+    # 用於挑選成功的歷史 Log，不是 Response 的業務回傳碼。
     success_return_code: "200"
+    # 多系統共用 Log 表時可設定；不需要就留空。
     system_code: ""
+    # 單次最多讀取幾筆歷史紀錄。
     fetch_limit: 10000
+
 projects:
-  - id: sample
+  - # 建立案例後請勿任意修改 id，否則既有案例會留在舊 ID 下。
+    id: sample
     name: 範例專案
+    # 本機 Spring Boot Repo 絕對路徑；不掃 Repo 時可留空。
     repo_path: ""
     environments:
       - name: Local
+        # 真正接收測試 Request 的服務位址，請確認不是正式環境。
         base_url: http://localhost:8080
+        # Springdoc 預設通常為 /v3/api-docs。
         openapi_path: /v3/api-docs
+        # 正式憑證建議 true；可信任的自簽測試環境才設 false。
         verify_ssl: false
         timeout_seconds: 30
+        # 只套用此環境，會覆蓋同名的專案 Header。
+        common_headers: {}
     response:
+      # Response 業務碼位置；沒有業務碼驗證時可留空。
       return_code_path: $.returnCode
       success_code: "0000"
     authentication:
       type: bearer
       header_name: Authorization
       prefix: Bearer
+    # 套用到此專案所有環境，例如 {X-System-Code: SAMPLE}。
     common_headers: {}
+    # 同時送出的最大 Request 數，建議先由 3～5 開始。
     max_concurrency: 5
+
+# 套用到所有專案；專案、環境、執行與案例 Header 可依序覆蓋。
 common_headers: {}
+
 security:
+  # Base URL 含以下文字時禁止執行，避免誤打正式環境。
   blocked_host_keywords:
     - prod
     - production
+  # 從 DB Log 產生 Request 時不帶入這些 Header。
   remove_headers:
     - authorization
     - cookie
@@ -60,5 +93,7 @@ security:
     - content-length
     - connection
     - transfer-encoding
+
 reports:
+  # 相對於 EXE／程式所在資料夾的報告目錄。
   directory: reports

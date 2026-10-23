@@ -28,9 +28,24 @@ Token 只在本次執行使用；Authorization、Cookie、API Key 等敏感 Head
 
 ## 檔案
 
-- `config.yaml`：應用程式、專案、環境、Header 及資料庫設定。
+- `config.yaml`：程式實際讀取的設定；GitHub 版本提供可直接啟動的安全預設值。
+- `config.example.yaml`：含中文欄位說明的還原範本。
 - `test-data.db`：API、測試案例及報告索引。
 - `reports/`：HTML 與 JSON 測試報告。
+
+## 設定檔
+
+下載原始碼後可直接修改 `config.yaml`，或啟動工具後到「系統設定」用 UI 編輯。重要欄位如下：
+
+- `application.port`：本機操作頁使用的 Port，預設為 `8765`。
+- `database.type`：選擇 `db2` 或 `oracle`。
+- `database.columns`：左側固定名稱不可改；右側請改成 `ADM_API_ACCESS_LOGS` 的實際欄位。
+- `projects[].repo_path`：Spring Boot Repo 的本機絕對路徑。
+- `projects[].environments[].base_url`：實際執行 API 測試的目標位址。
+- `projects[].response`：Response 業務碼的 JSON Path 與成功碼。
+- `common_headers`：全域 Header；專案及環境也可分別設定。
+
+`config.yaml` 與 `config.example.yaml` 預設都不含帳號、密碼或 Token。設定真實資料庫帳密後，請勿把修改後的 `config.yaml` 再提交到 GitHub。
 
 ## 開發環境
 
