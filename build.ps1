@@ -1,0 +1,24 @@
+$ErrorActionPreference = "Stop"
+$Python = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+if (-not (Test-Path $Python)) {
+    throw "找不到 .venv。請先安裝 Python 並執行：python -m venv .venv"
+}
+& $Python -m PyInstaller --noconfirm --clean --onefile --noconsole --name "API回歸測試工具" `
+    --add-data "static;static" `
+    --add-data "config.example.yaml;." `
+    --add-data ".venv\Lib\site-packages\clidriver;clidriver" `
+    --add-binary ".venv\Lib\site-packages\ibm_db.cp312-win_amd64.pyd;." `
+    --hidden-import uvicorn.logging `
+    --hidden-import uvicorn.loops.auto `
+    --hidden-import uvicorn.protocols.http.auto `
+    --hidden-import uvicorn.protocols.websockets.auto `
+    --hidden-import uvicorn.lifespan.on `
+    --hidden-import oracledb `
+    --collect-all oracledb `
+    run.py
+if ($LASTEXITCODE -ne 0) {
+    throw "PyInstaller 建置失敗，Exit Code: $LASTEXITCODE"
+}
+Copy-Item "config.example.yaml" "dist\config.example.yaml" -Force
+Copy-Item "README.md" "dist\README.md" -Force
+Write-Host "完成：dist\API回歸測試工具.exe"

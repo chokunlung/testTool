@@ -1,0 +1,14 @@
+.venv/
+build/
+dist/
+github-publish/
+*.spec
+config.yaml
+reports/
+*.db
+*.sqlite
+*.sqlite3
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
