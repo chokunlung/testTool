@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import os
 import sys
 import threading
@@ -9,13 +10,14 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .api_discovery import discover_repo, discover_url
 from .core import BASE_DIR, CONFIG_PATH, load_config, merge_secret, safe_config, save_config
 from .database_service import test_connection
+from .repo_dialog import choose_repo_directory
 from .runner import generate_case_from_database, run_saved_cases
 from .session_lifecycle import lifecycle
 from .storage import add_manual_case, get_case, get_run, init_db, list_cases, list_runs, update_case, upsert_endpoints
@@ -45,7 +47,7 @@ class SessionRequest(BaseModel):
 def find_project(config: dict[str, Any], project_id: str) -> dict[str, Any]:
     project = next((p for p in config.get("projects", []) if p.get("id") == project_id), None)
     if not project:
-        raise HTTPException(404, "找不到專案")
+        raise HTTPException(404, "找不到 Repo")
     return project
 
 
@@ -91,6 +93,21 @@ def put_config(data: dict[str, Any]):
         return {"ok": True, "path": str(CONFIG_PATH)}
     except Exception as exc:
         raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/api/dialogs/select-repo")
+def select_repo(request: Request):
+    try:
+        client_host = request.client.host if request.client else ""
+        if not ipaddress.ip_address(client_host).is_loopback:
+            raise HTTPException(403, "只能從本機選擇 Repo")
+    except ValueError as exc:
+        raise HTTPException(403, "只能從本機選擇 Repo") from exc
+    try:
+        selected = choose_repo_directory()
+        return {"cancelled": selected is None, **(selected or {})}
+    except Exception as exc:
+        raise HTTPException(400, f"無法選擇 Repo：{exc}") from exc
 
 
 @app.post("/api/database/test")

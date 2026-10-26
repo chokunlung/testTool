@@ -1,18 +1,32 @@
+# API 回歸測試工具設定範例
+# 此檔不含真實帳密，可作為 config.yaml 的還原範本。
+# 建議優先從 UI「系統設定」修改；直接編輯後需重新啟動工具。
+
 application:
+  # 工具只監聽本機，避免其他電腦直接連入。
   host: 127.0.0.1
+  # UI 使用的本機 Port；被占用時可改成其他未使用的 Port。
   port: 8765
+  # 啟動 EXE 後是否自動開啟預設瀏覽器。
   open_browser: true
+
 database:
+  # 可填 db2 或 oracle。Oracle 使用 Thin Mode，不需 Oracle Client。
   type: db2
   host: ""
+  # DB2 常用 50000；Oracle 常用 1521。
   port: 50000
+  # DB2 Database 名稱；使用 Oracle 時通常留空。
   database: ""
+  # Oracle Service Name；使用 DB2 時留空。
   service_name: ""
+  # 建議使用只有 ADM_API_ACCESS_LOGS 查詢權限的帳號。
   username: ""
   password: ""
   protocol: TCPIP
   schema: DB2WMS
   table: ADM_API_ACCESS_LOGS
+  # 左側固定名稱不可修改；右側改成資料庫的實際欄位名稱。
   columns:
     id: LOG_ID
     request_time: REQUEST_TIME
@@ -26,33 +40,24 @@ database:
     system_code: SYSTEM_CODE
     api_name: API_NAME
   query:
+    # 用於挑選成功的歷史 Log，不是 Response 的業務回傳碼。
     success_return_code: "200"
+    # 多系統共用 Log 表時可設定；不需要就留空。
     system_code: ""
+    # 單次最多讀取幾筆歷史紀錄。
     fetch_limit: 10000
-projects:
-  - id: sample
-    name: 範例專案
-    repo_path: ""
-    environments:
-      - name: Local
-        base_url: http://localhost:8080
-        openapi_path: /v3/api-docs
-        verify_ssl: false
-        timeout_seconds: 30
-    response:
-      return_code_path: $.returnCode
-      success_code: "0000"
-    authentication:
-      type: bearer
-      header_name: Authorization
-      prefix: Bearer
-    common_headers: {}
-    max_concurrency: 5
+
+projects: []
+
+# 套用到所有 Repo；Repo、環境、執行與案例 Header 可依序覆蓋。
 common_headers: {}
+
 security:
+  # Base URL 含以下文字時禁止執行，避免誤打正式環境。
   blocked_host_keywords:
     - prod
     - production
+  # 從 DB Log 產生 Request 時不帶入這些 Header。
   remove_headers:
     - authorization
     - cookie
@@ -60,5 +65,7 @@ security:
     - content-length
     - connection
     - transfer-encoding
+
 reports:
+  # 相對於 EXE／程式所在資料夾的報告目錄。
   directory: reports

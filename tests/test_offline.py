@@ -5,15 +5,36 @@ import unittest
 from pathlib import Path
 
 import httpx
+from starlette.requests import Request
 
+from app import main
 from app import storage
 from app import reporting
 from app.api_discovery import parse_openapi
 from app.runner import _assert_response, _replace_path
+from app.repo_dialog import repo_metadata
 from app.session_lifecycle import SessionLifecycle
 
 
 class OfflineTests(unittest.TestCase):
+    def test_repo_metadata_uses_folder_as_project_identity(self):
+        with tempfile.TemporaryDirectory(prefix="order-service-") as folder:
+            metadata = repo_metadata(folder)
+            self.assertEqual(metadata["path"], str(Path(folder).resolve()))
+            self.assertEqual(metadata["name"], Path(folder).name)
+            self.assertTrue(metadata["project_id"].startswith("order-service-"))
+
+    def test_repo_dialog_endpoint_returns_selected_repo_for_local_client(self):
+        original = main.choose_repo_directory
+        main.choose_repo_directory = lambda: {"path": r"C:\code\orders", "name": "orders", "project_id": "orders"}
+        try:
+            request = Request({"type": "http", "method": "POST", "path": "/api/dialogs/select-repo", "headers": [], "client": ("127.0.0.1", 12345), "server": ("127.0.0.1", 8765), "scheme": "http"})
+            result = main.select_repo(request)
+            self.assertFalse(result["cancelled"])
+            self.assertEqual(result["project_id"], "orders")
+        finally:
+            main.choose_repo_directory = original
+
     def test_parse_openapi_generates_request(self):
         document = {
             "openapi": "3.0.0",

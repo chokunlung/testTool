@@ -12,7 +12,7 @@ Windows 執行檔位於 [`release/API回歸測試工具.exe`](release/API回歸�
 - 從 Repo 內的 OpenAPI 文件或 Spring Controller Annotation 匯入 API。
 - 將 API 與測試 Request 保存到 `test-data.db`。
 - Request 可個別調整 Path、Query、Header、Body 與預期結果。
-- 支援全域、專案、環境、本次執行及案例 Header。
+- 支援全域、Repo、環境、本次執行及案例 Header。
 - 可從 DB2 或 Oracle `ADM_API_ACCESS_LOGS` 依 `API_NAME` 產生 Request。
 - 支援單筆、勾選多筆及全部啟用案例執行。
 - 產生可離線開啟的 HTML 報告及原始 JSON 報告。
@@ -20,7 +20,7 @@ Windows 執行檔位於 [`release/API回歸測試工具.exe`](release/API回歸�
 ## 使用方式
 
 1. 執行 `API回歸測試工具.exe`，瀏覽器會自動開啟本機操作畫面。
-2. 到「系統設定」建立專案、環境、共用 Header 與資料庫欄位對應。
+2. 到「系統設定」按「新增 Repo」，從檔案總管選擇要測試的 Spring Boot Repo，再設定環境、共用 Header 與資料庫欄位對應。
 3. 到「測試執行」選擇已保存案例、OpenAPI URL 或 Spring Boot Repo。
 4. 編輯並保存每一筆測試案例。
 5. 選擇目標環境，單筆或勾選多筆執行。
@@ -44,10 +44,11 @@ Token 只在本次執行使用；Authorization、Cookie、API Key 等敏感 Head
 - `application.port`：本機操作頁使用的 Port，預設為 `8765`。
 - `database.type`：選擇 `db2` 或 `oracle`。
 - `database.columns`：左側固定名稱不可改；右側請改成 `ADM_API_ACCESS_LOGS` 的實際欄位。
-- `projects[].repo_path`：Spring Boot Repo 的本機絕對路徑。
+- `projects[]`：內部保存的 Repo 清單；一筆就是一個 Repo，不存在額外的專案層級。
+- `projects[].repo_path`：由檔案總管選擇的 Spring Boot Repo 本機絕對路徑。
 - `projects[].environments[].base_url`：實際執行 API 測試的目標位址。
 - `projects[].response`：Response 業務碼的 JSON Path 與成功碼。
-- `common_headers`：全域 Header；專案及環境也可分別設定。
+- `common_headers`：全域 Header；Repo 及環境也可分別設定。
 
 `config.yaml` 與 `config.example.yaml` 預設都不含帳號、密碼或 Token。設定真實資料庫帳密後，請勿把修改後的 `config.yaml` 再提交到 GitHub。
 

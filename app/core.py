@@ -85,7 +85,7 @@ def validate_config(data: dict[str, Any]) -> None:
             validate_identifier(value, f"欄位 {key}")
     for project in data.get("projects", []):
         if not project.get("id") or not project.get("name"):
-            raise ValueError("每個專案都必須設定 id 與 name")
+            raise ValueError("每個 Repo 都必須設定 id 與 name")
         for env in project.get("environments", []):
             if not str(env.get("base_url", "")).startswith(("http://", "https://")):
                 raise ValueError(f"環境 {env.get('name', '')} 的 Base URL 無效")

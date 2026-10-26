@@ -47,37 +47,9 @@ database:
     # 單次最多讀取幾筆歷史紀錄。
     fetch_limit: 10000
 
-projects:
-  - # 建立案例後請勿任意修改 id，否則既有案例會留在舊 ID 下。
-    id: sample
-    name: 範例專案
-    # 本機 Spring Boot Repo 絕對路徑；不掃 Repo 時可留空。
-    repo_path: ""
-    environments:
-      - name: Local
-        # 真正接收測試 Request 的服務位址，請確認不是正式環境。
-        base_url: http://localhost:8080
-        # Springdoc 預設通常為 /v3/api-docs。
-        openapi_path: /v3/api-docs
-        # 正式憑證建議 true；可信任的自簽測試環境才設 false。
-        verify_ssl: false
-        timeout_seconds: 30
-        # 只套用此環境，會覆蓋同名的專案 Header。
-        common_headers: {}
-    response:
-      # Response 業務碼位置；沒有業務碼驗證時可留空。
-      return_code_path: $.returnCode
-      success_code: "0000"
-    authentication:
-      type: bearer
-      header_name: Authorization
-      prefix: Bearer
-    # 套用到此專案所有環境，例如 {X-System-Code: SAMPLE}。
-    common_headers: {}
-    # 同時送出的最大 Request 數，建議先由 3～5 開始。
-    max_concurrency: 5
+projects: []
 
-# 套用到所有專案；專案、環境、執行與案例 Header 可依序覆蓋。
+# 套用到所有 Repo；Repo、環境、執行與案例 Header 可依序覆蓋。
 common_headers: {}
 
 security:
