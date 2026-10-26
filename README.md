@@ -10,6 +10,7 @@ Windows 執行檔位於 [`release/API回歸測試工具.exe`](release/API回歸�
 
 - 從執行中的 Spring Boot `/v3/api-docs` 匯入 API。
 - 從 Repo 內的 OpenAPI 文件或 Spring Controller Annotation 匯入 API。
+- 可新增或刪除 Repo；刪除只會清除工具內的設定、案例與報告，不會刪除原始碼資料夾。
 - 將 API 與測試 Request 保存到 `test-data.db`。
 - Request 可個別調整 Path、Query、Header、Body 與預期結果。
 - 支援全域、Repo、環境、本次執行及案例 Header。

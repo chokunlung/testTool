@@ -201,7 +201,7 @@ async def run_saved_cases(config: dict[str, Any], project: dict[str, Any], env: 
         wanted = set(case_ids)
         cases = [item for item in all_cases if item["id"] in wanted]
         if len(cases) != len(wanted):
-            raise ValueError("部分測試案例不存在或不屬於目前專案")
+            raise ValueError("部分測試案例不存在或不屬於目前 Repo")
     else:
         cases = [item for item in all_cases if item.get("enabled", True)]
     if not cases:

@@ -258,3 +258,27 @@ def get_run(run_id: int) -> dict[str, Any] | None:
     with connection() as conn:
         row = conn.execute("SELECT * FROM run_history WHERE id=?", (run_id,)).fetchone()
     return _decode(row) if row else None
+
+
+def delete_repo_data(project_id: str) -> dict[str, Any]:
+    init_db()
+    with connection() as conn:
+        endpoint_count = int(conn.execute("SELECT COUNT(*) FROM api_endpoints WHERE project_id=?", (project_id,)).fetchone()[0])
+        case_count = int(
+            conn.execute(
+                "SELECT COUNT(*) FROM test_cases c JOIN api_endpoints e ON e.id=c.endpoint_id WHERE e.project_id=?",
+                (project_id,),
+            ).fetchone()[0]
+        )
+        runs = conn.execute(
+            "SELECT json_file, html_file FROM run_history WHERE project_id=?",
+            (project_id,),
+        ).fetchall()
+        conn.execute("DELETE FROM run_history WHERE project_id=?", (project_id,))
+        conn.execute("DELETE FROM api_endpoints WHERE project_id=?", (project_id,))
+    return {
+        "endpoints": endpoint_count,
+        "cases": case_count,
+        "runs": len(runs),
+        "report_files": [str(row[key]) for row in runs for key in ("json_file", "html_file") if row[key]],
+    }

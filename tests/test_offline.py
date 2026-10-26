@@ -95,8 +95,25 @@ class OfflineTests(unittest.TestCase):
                 self.assertTrue(json_file.is_file())
                 self.assertIn("********", content)
                 self.assertNotIn("Bearer secret", content)
+                self.assertIn("Repo：Demo", content)
             finally:
                 reporting.BASE_DIR = original
+
+    def test_delete_repo_data_removes_cases_and_run_history(self):
+        with tempfile.TemporaryDirectory() as folder:
+            original = storage.DB_PATH
+            storage.DB_PATH = Path(folder) / "test.db"
+            try:
+                storage.upsert_endpoints("orders", [{"method": "GET", "path": "/orders"}])
+                storage.record_run("orders", "Local", "2026-10-26T22:00:00", {"PASS": 1}, str(Path(folder) / "report.json"), str(Path(folder) / "report.html"))
+                deleted = storage.delete_repo_data("orders")
+                self.assertEqual(deleted["endpoints"], 1)
+                self.assertEqual(deleted["cases"], 1)
+                self.assertEqual(deleted["runs"], 1)
+                self.assertEqual(storage.list_cases("orders"), [])
+                self.assertEqual(storage.list_runs("orders"), [])
+            finally:
+                storage.DB_PATH = original
 
     def test_browser_leave_waits_and_reload_cancels_shutdown(self):
         lifecycle = SessionLifecycle(exit_fn=lambda _: None, shutdown_delay_seconds=3, stale_seconds=120)

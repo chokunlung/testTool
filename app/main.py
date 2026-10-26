@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import ipaddress
 import os
 import sys
@@ -20,7 +21,7 @@ from .database_service import test_connection
 from .repo_dialog import choose_repo_directory
 from .runner import generate_case_from_database, run_saved_cases
 from .session_lifecycle import lifecycle
-from .storage import add_manual_case, get_case, get_run, init_db, list_cases, list_runs, update_case, upsert_endpoints
+from .storage import add_manual_case, delete_repo_data, get_case, get_run, init_db, list_cases, list_runs, update_case, upsert_endpoints
 
 
 STATIC_DIR = Path(getattr(__import__("sys"), "_MEIPASS", BASE_DIR)) / "static"
@@ -56,6 +57,15 @@ def find_env(project: dict[str, Any], name: str) -> dict[str, Any]:
     if not env:
         raise HTTPException(404, "找不到環境")
     return env
+
+
+def require_local_request(request: Request) -> None:
+    try:
+        client_host = request.client.host if request.client else ""
+        if not ipaddress.ip_address(client_host).is_loopback:
+            raise HTTPException(403, "此操作只能從本機執行")
+    except ValueError as exc:
+        raise HTTPException(403, "此操作只能從本機執行") from exc
 
 
 @app.on_event("startup")
@@ -97,17 +107,39 @@ def put_config(data: dict[str, Any]):
 
 @app.post("/api/dialogs/select-repo")
 def select_repo(request: Request):
-    try:
-        client_host = request.client.host if request.client else ""
-        if not ipaddress.ip_address(client_host).is_loopback:
-            raise HTTPException(403, "只能從本機選擇 Repo")
-    except ValueError as exc:
-        raise HTTPException(403, "只能從本機選擇 Repo") from exc
+    require_local_request(request)
     try:
         selected = choose_repo_directory()
         return {"cancelled": selected is None, **(selected or {})}
     except Exception as exc:
         raise HTTPException(400, f"無法選擇 Repo：{exc}") from exc
+
+
+@app.delete("/api/repos/{repo_id}")
+def delete_repo(repo_id: str, request: Request):
+    require_local_request(request)
+    original = load_config()
+    repo = find_project(original, repo_id)
+    updated = copy.deepcopy(original)
+    updated["projects"] = [item for item in updated.get("projects", []) if item.get("id") != repo_id]
+    try:
+        save_config(updated)
+        deleted = delete_repo_data(repo_id)
+    except Exception as exc:
+        save_config(original)
+        raise HTTPException(400, f"刪除 Repo 失敗：{exc}") from exc
+
+    report_root = (BASE_DIR / original.get("reports", {}).get("directory", "reports")).resolve()
+    removed_reports = 0
+    for filename in deleted.pop("report_files"):
+        try:
+            path = Path(filename).resolve()
+            if path.is_file() and (path.parent == report_root or report_root in path.parents):
+                path.unlink()
+                removed_reports += 1
+        except OSError:
+            continue
+    return {"ok": True, "repo": repo.get("name", repo_id), **deleted, "removed_report_files": removed_reports}
 
 
 @app.post("/api/database/test")
