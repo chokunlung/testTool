@@ -2,6 +2,10 @@
 
 Windows 本機 API 測試工具。API 清單與測試案例保存在 SQLite，可逐筆調整 Request，再單筆、多筆或全部執行，並產生 HTML 與 JSON 報告。
 
+## 下載建置版本
+
+Windows 執行檔位於 [`release/API回歸測試工具.exe`](release/API回歸測試工具.exe)，下載後可直接執行。使用說明及範例設定請參閱 [`release/`](release/)。
+
 ## 主要功能
 
 - 從執行中的 Spring Boot `/v3/api-docs` 匯入 API。
